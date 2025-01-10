@@ -10,16 +10,19 @@ import {Order} from "@/types/orders";
 
 export default function TabTwoScreen() {
   const [orders, setOrders] = useState<Order[]>([]);
+    const [ordersRefreshing, setOrdersRefreshing] = useState(false);
 
   useEffect(() => {
       getOrders();
   }, []);
 
   const getOrders = async () => {
-        const ordersFetched = await fetchOrders();
+      setOrdersRefreshing(true);
+      const ordersFetched = await fetchOrders();
         if(ordersFetched) {
             setOrders(ordersFetched);
         }
+      setOrdersRefreshing(false);
   };
 
 
@@ -31,6 +34,8 @@ export default function TabTwoScreen() {
       <FlatList
         data={orders.reverse()}
         keyExtractor={(item) => item.id}
+        onRefresh={getOrders}
+        refreshing={ordersRefreshing}
         renderItem={({ item }) => (
           <ThemedView style={styles.orderItem}>
             <ThemedText>{item.id}</ThemedText>
