@@ -50,22 +50,27 @@ export default function PosScreen() {
   }
 
   const payOrder = useCallback( async() => {
+    let tempBasket = basket;
+    setBasket([]);
     const payment = {
       order_id: orderId,
       amount: basket.reduce((acc, item) => acc + item.price_unit, 0)
     };
-    const response = await fetchPayOrder(payment);
-    if(response && response.status !== 'completed' && orderId) {
-      const status = {status: 'completed'}
-      await fetchPatchStatus(orderId, status);
+    try {
+      const response = await fetchPayOrder(payment);
+      if(response && response.status !== 'completed' && orderId) {
+        const status = {status: 'completed'}
+        await fetchPatchStatus(orderId, status);
+      }
+      Toast.show({
+        type: 'success',
+        text1: 'Order payed',
+        text2: 'You can view it in the Orders screen'
+      });
+      setOrderId(null);
+    } catch (e) {
+      setBasket(tempBasket);
     }
-    Toast.show({
-      type: 'success',
-      text1: 'Order payed',
-      text2: 'You can view it in the Orders screen'
-    });
-    setBasket([]);
-    setOrderId(null);
   }, [orderId, basket]);
 
   return (
