@@ -11,12 +11,15 @@ export default function PosScreen() {
   const [basket, setBasket] = useState<Product[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [productsRefreshing, setProductsRefreshing] = useState(false);
 
   const getProducts = async () => {
+    setProductsRefreshing(true);
     const productsFetched = await fetchProducts();
     if(productsFetched) {
       setProducts(productsFetched)
     }
+    setProductsRefreshing(false);
   }
 
   useEffect(() => {
@@ -66,10 +69,12 @@ export default function PosScreen() {
     <ThemedView style={styles.container}>
       <ThemedView style={styles.productGrid}>
         <FlatList
-          data={products}
-          renderItem={renderProduct}
-          keyExtractor={(item) => item.id}
-          numColumns={2}
+            data={products}
+            renderItem={renderProduct}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            onRefresh={getProducts}
+            refreshing={productsRefreshing}
         />
       </ThemedView>
 
