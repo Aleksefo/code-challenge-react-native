@@ -3,30 +3,24 @@ import { StyleSheet, FlatList, TouchableOpacity, Text } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-
-type Product = {
-  id: string;
-  name: string;
-  price_unit: number;
-  vat_rate: number;
-}
-
-const AUTH_USER_TOKEN = ''; // use your own token
+import {fetchPatchStatus, fetchCreateOrder, fetchPayOrder, fetchProducts} from "@/services/api";
+import {Product} from "@/types/products";
+import Toast from 'react-native-toast-message';
 
 export default function PosScreen() {
-  const [basket, setBasket] = useState([]);
-  const [products, setProducts] = useState([] as Product[]);
+  const [basket, setBasket] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [orderId, setOrderId] = useState<string | null>(null);
 
+  const getProducts = async () => {
+    const productsFetched = await fetchProducts();
+    if(productsFetched) {
+      setProducts(productsFetched)
+    }
+  }
+
   useEffect(() => {
-    fetch('https://kanpla-code-challenge.up.railway.app/products', {
-      headers: {
-        "x-auth-user": AUTH_USER_TOKEN
-      }
-    })
-      .then((response) => response.json())
-      .then((json) => setProducts(json))
-      .catch((error) => console.error(error));
+    getProducts();
   }, [])
 
   const renderProduct = ({ item }) => (
@@ -36,55 +30,36 @@ export default function PosScreen() {
     </TouchableOpacity>
   );
 
-  const createOrder = () => {
-    fetch('https://kanpla-code-challenge.up.railway.app/orders', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        "x-auth-user": AUTH_USER_TOKEN
-      },
-      body: JSON.stringify({
-        total: basket.reduce((acc, item) => acc + item.price_unit, 0),
-      })
-    })
-      .then((response) => response.json())
-      .then((json) => {
-        setOrderId(json.id);
-      })
-      .catch((error) => console.error(error));
+  const createOrder = async () => {
+    const totalOrder = { total: basket.reduce((acc, item) => acc + item.price_unit, 0), }
+    const order = await fetchCreateOrder(totalOrder);
+    if(order) {
+      setOrderId(order.id);
+      Toast.show({
+        type: 'success',
+        text1: 'Order created',
+        text2: 'Now you can proceed to payment'
+      });
+    }
   }
 
-  const payOrder = useCallback(() => {
-    fetch(`https://kanpla-code-challenge.up.railway.app/payments`, {
-      method: 'POST',
-      headers: {
-        "x-auth-user": AUTH_USER_TOKEN,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        order_id: orderId,
-        amount: basket.reduce((acc, item) => acc + item.price_unit, 0)
-      })
-    })
-      .then((response) => response.status === 201 ? response.json() : Promise.reject(response))
-      .then((json) => {
-        fetch(`https://kanpla-code-challenge.up.railway.app/orders/${json.order_id}`, {
-          method: 'PATCH',
-          headers: {
-            "x-auth-user": AUTH_USER_TOKEN
-          },
-          body: JSON.stringify({
-            status: 'completed',
-          })
-        })
-          .then((response) => response.status === 201 ? response.json() : Promise.reject(response))
-          .then((json) => {
-            setBasket([]);
-            setOrderId(null);
-          })
-          .catch((error) => console.error(error));
-      })
-      .catch((error) => console.error(error));
+  const payOrder = useCallback( async() => {
+    const payment = {
+      order_id: orderId,
+      amount: basket.reduce((acc, item) => acc + item.price_unit, 0)
+    };
+    const response = await fetchPayOrder(payment);
+    if(response && response.status !== 'completed' && orderId) {
+      const status = {status: 'completed'}
+      await fetchPatchStatus(orderId, status);
+    }
+    Toast.show({
+      type: 'success',
+      text1: 'Order payed',
+      text2: 'You can view it in the Orders screen'
+    });
+    setBasket([]);
+    setOrderId(null);
   }, [orderId, basket]);
 
   return (
@@ -104,7 +79,7 @@ export default function PosScreen() {
         {basket.map((item, index) => (
           <ThemedView key={index} style={styles.basketItem}>
             <Text style={styles.text}>{item.name}</Text>
-            <Text style={styles.text}>${item.price}</Text>
+            <Text style={styles.text}>${item.price_unit}</Text>
           </ThemedView>
         ))}
 

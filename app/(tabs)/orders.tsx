@@ -1,31 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { FlatList, ActivityIndicator, View } from 'react-native';
+import { FlatList } from 'react-native';
 import { StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import {fetchOrders} from "@/services/api";
+import {Order} from "@/types/orders";
 
-const AUTH_USER_TOKEN = ''; // use your own token
 
 export default function TabTwoScreen() {
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
-    fetchOrders();
+      getOrders();
   }, []);
 
-  const fetchOrders = async () => {
-    try {
-      const response = await fetch('https://kanpla-code-challenge.up.railway.app/orders', {
-        headers: {
-          "x-auth-user": AUTH_USER_TOKEN
+  const getOrders = async () => {
+        const ordersFetched = await fetchOrders();
+        if(ordersFetched) {
+            setOrders(ordersFetched);
         }
-      })
-      const data = await response.json() as { id: string, created_at: string, amount: number }[];
-      setOrders(data);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-    }
   };
 
 
@@ -35,13 +29,13 @@ export default function TabTwoScreen() {
         <ThemedText type="title">Paid Orders</ThemedText>
       </ThemedView>
       <FlatList
-        data={orders}
+        data={orders.reverse()}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <ThemedView style={styles.orderItem}>
             <ThemedText>{item.id}</ThemedText>
             <ThemedText>{item.created_at}</ThemedText>
-            <ThemedText>{item.amount}$</ThemedText>
+            <ThemedText>{item.amount_total}$</ThemedText>
           </ThemedView>
         )}
       />
