@@ -4,28 +4,22 @@ import { StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import {fetchOrders} from "@/services/api";
+import {Order} from "@/types/orders";
 
-const AUTH_USER_TOKEN = ''; // use your own token
 
 export default function TabTwoScreen() {
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
-    fetchOrders();
+      getOrders();
   }, []);
 
-  const fetchOrders = async () => {
-    try {
-      const response = await fetch('https://kanpla-code-challenge.up.railway.app/orders', {
-        headers: {
-          "x-auth-user": AUTH_USER_TOKEN
+  const getOrders = async () => {
+        const ordersFetched = await fetchOrders();
+        if(ordersFetched) {
+            setOrders(ordersFetched);
         }
-      })
-      const data = await response.json() as { id: string, created_at: string, amount: number }[];
-      setOrders(data);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-    }
   };
 
 
