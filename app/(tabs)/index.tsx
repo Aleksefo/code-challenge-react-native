@@ -6,6 +6,7 @@ import { ThemedView } from '@/components/ThemedView';
 import {fetchPatchStatus, fetchCreateOrder, fetchPayOrder, fetchProducts} from "@/services/api";
 import {Product} from "@/types/products";
 import Toast from 'react-native-toast-message';
+import {roundPrice} from "@/services/roundPrice";
 
 export default function PosScreen() {
   const [basket, setBasket] = useState<Product[]>([]);
@@ -26,15 +27,17 @@ export default function PosScreen() {
     getProducts();
   }, [])
 
-  const renderProduct = ({ item }) => (
+  const renderProduct = ({ item }: { item: Product }) => (
     <TouchableOpacity style={styles.product} onPress={() => setBasket((prev) => [...prev, item])}>
       <Text style={styles.text}>{item.name}</Text>
-      <Text style={styles.text}>${item.price_unit * (item.vat_rate + 1)}</Text>
+      <Text style={styles.text}>${roundPrice(item.price_unit * (item.vat_rate + 1))}</Text>
     </TouchableOpacity>
-  );
+  )
+
+
 
   const createOrder = async () => {
-    const totalOrder = { total: basket.reduce((acc, item) => acc + item.price_unit, 0), }
+    const totalOrder = { total: basket.reduce((acc, item) => acc + roundPrice(item.price_unit * (item.vat_rate + 1)), 0), }
     const order = await fetchCreateOrder(totalOrder);
     if(order) {
       setOrderId(order.id);
@@ -84,11 +87,11 @@ export default function PosScreen() {
         {basket.map((item, index) => (
           <ThemedView key={index} style={styles.basketItem}>
             <Text style={styles.text}>{item.name}</Text>
-            <Text style={styles.text}>${item.price_unit}</Text>
+            <Text style={styles.text}>${roundPrice(item.price_unit * (item.vat_rate + 1))}</Text>
           </ThemedView>
         ))}
 
-        <ThemedText style={styles.text}>Total: ${basket.reduce((acc, item) => acc + item.price_unit, 0)}</ThemedText>
+        <ThemedText style={styles.text}>Total: ${roundPrice(basket.reduce((acc, item) => acc + item.price_unit * (item.vat_rate + 1), 0))}</ThemedText>
 
         <TouchableOpacity style={styles.button} onPress={createOrder}>
           <ThemedText style={styles.buttonText}>Create Order</ThemedText>
