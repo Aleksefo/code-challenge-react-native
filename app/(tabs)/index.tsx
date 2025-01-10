@@ -8,8 +8,8 @@ import {Product} from "@/types/products";
 import Toast from 'react-native-toast-message';
 
 export default function PosScreen() {
-  const [basket, setBasket] = useState([]);
-  const [products, setProducts] = useState([] as Product[]);
+  const [basket, setBasket] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [orderId, setOrderId] = useState<string | null>(null);
 
   const getProducts = async () => {
@@ -79,7 +79,7 @@ export default function PosScreen() {
         {basket.map((item, index) => (
           <ThemedView key={index} style={styles.basketItem}>
             <Text style={styles.text}>{item.name}</Text>
-            <Text style={styles.text}>${item.price}</Text>
+            <Text style={styles.text}>${item.price_unit}</Text>
           </ThemedView>
         ))}
 

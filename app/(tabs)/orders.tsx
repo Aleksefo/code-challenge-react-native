@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FlatList, ActivityIndicator, View } from 'react-native';
+import { FlatList } from 'react-native';
 import { StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -29,13 +29,13 @@ export default function TabTwoScreen() {
         <ThemedText type="title">Paid Orders</ThemedText>
       </ThemedView>
       <FlatList
-        data={orders}
+        data={orders.reverse()}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <ThemedView style={styles.orderItem}>
             <ThemedText>{item.id}</ThemedText>
             <ThemedText>{item.created_at}</ThemedText>
-            <ThemedText>{item.amount}$</ThemedText>
+            <ThemedText>{item.amount_total}$</ThemedText>
           </ThemedView>
         )}
       />
