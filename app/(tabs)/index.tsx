@@ -7,21 +7,43 @@ import {fetchPatchStatus, fetchCreateOrder, fetchPayOrder, fetchProducts} from "
 import {Product} from "@/types/products";
 import Toast from 'react-native-toast-message';
 import {roundPrice} from "@/services/roundPrice";
+import {loadStoredState} from "@/services/storageService";
+import {useDispatch, useGlobalState} from "@/state/AppContext";
 
 export default function PosScreen() {
+  const dispatch = useDispatch()
+  const state = useGlobalState()
   const [basket, setBasket] = useState<Product[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [productsRefreshing, setProductsRefreshing] = useState(false);
 
+  useEffect(() => {
+    loadStoredState(dispatch)
+  }, [])
+
   const getProducts = async () => {
     setProductsRefreshing(true);
-    const productsFetched = await fetchProducts();
-    if(productsFetched) {
-      setProducts(productsFetched)
+    try{
+      const productsFetched = await fetchProducts();
+      if(productsFetched) {
+        setProducts(productsFetched)
+        dispatch({
+          type: 'saveProducts',
+          payload: { products: productsFetched },
+        })
+      }
+    } catch(err) {
+      setProductsRefreshing(false);
     }
     setProductsRefreshing(false);
   }
+
+  useEffect(() => {
+    if (state.stateLoaded && state.products) {
+      setProducts(state.products)
+    }
+  }, [state.stateLoaded])
 
   useEffect(() => {
     getProducts();
