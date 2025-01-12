@@ -1,46 +1,45 @@
-import React, { useEffect, useState } from 'react';
-import { FlatList } from 'react-native';
-import { StyleSheet } from 'react-native';
+import React, { useEffect, useState } from "react";
+import { FlatList } from "react-native";
+import { StyleSheet } from "react-native";
 
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import {fetchOrders} from "@/services/api";
-import {Order} from "@/types/orders";
-import {useDispatch, useGlobalState} from "@/state/AppContext";
-
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { fetchOrders } from "@/services/api";
+import { Order } from "@/types/orders";
+import { useDispatch, useGlobalState } from "@/state/AppContext";
 
 export default function TabTwoScreen() {
-    const dispatch = useDispatch()
-    const state = useGlobalState()
-    const [orders, setOrders] = useState<Order[]>([]);
-    const [ordersRefreshing, setOrdersRefreshing] = useState(false);
+  const dispatch = useDispatch();
+  const state = useGlobalState();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersRefreshing, setOrdersRefreshing] = useState(false);
 
-    useEffect(() => {
-        if (state.stateLoaded && state.orders) {
-            setOrders(state.orders)
-        }
-    }, [state.stateLoaded])
+  useEffect(() => {
+    if (state.stateLoaded && state.orders) {
+      setOrders(state.orders);
+    }
+  }, [state.stateLoaded]);
 
-    useEffect(() => {
-      getOrders();
+  useEffect(() => {
+    getOrders();
   }, []);
 
   const getOrders = async () => {
-      setOrdersRefreshing(true);
-      try{
-          const ordersFetched = await fetchOrders();
-          if(ordersFetched) {
-              let ordersReversed = ordersFetched.reverse()
-              setOrders(ordersReversed);
-              dispatch({
-                  type: 'saveOrders',
-                  payload: { orders: ordersReversed },
-              })
-          }
-      } catch(err) {
-          setOrdersRefreshing(false);
+    setOrdersRefreshing(true);
+    try {
+      const ordersFetched = await fetchOrders();
+      if (ordersFetched) {
+        let ordersReversed = ordersFetched.reverse();
+        setOrders(ordersReversed);
+        dispatch({
+          type: "saveOrders",
+          payload: { orders: ordersReversed },
+        });
       }
+    } catch (err) {
       setOrdersRefreshing(false);
+    }
+    setOrdersRefreshing(false);
   };
 
   return (
@@ -61,7 +60,6 @@ export default function TabTwoScreen() {
           </ThemedView>
         )}
       />
-
     </ThemedView>
   );
 }
@@ -72,17 +70,17 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   titleContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   orderItem: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    borderBottomColor: "#ccc",
   },
 });

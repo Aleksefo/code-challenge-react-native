@@ -1,28 +1,28 @@
-import {Product} from "@/types/products";
-import {Order} from "@/types/orders";
+import { Product } from "@/types/products";
+import { Order } from "@/types/orders";
 
 export interface State {
-  products?: Product[]
-  orders?: Order[]
-  stateLoaded?: boolean
+  products?: Product[];
+  orders?: Order[];
+  stateLoaded?: boolean;
 }
 
 export type Action =
   | {
-      type: 'loadStoredState'
+      type: "loadStoredState";
       payload: {
-        state: State
-      }
+        state: State;
+      };
     }
   | {
-      type: 'saveProducts'
+      type: "saveProducts";
       payload: {
-        products: Product[]
-      }
+        products: Product[];
+      };
     }
   | {
-      type: 'saveOrders'
+      type: "saveOrders";
       payload: {
-        orders: Order[]
-      }
-    }
+        orders: Order[];
+      };
+    };
