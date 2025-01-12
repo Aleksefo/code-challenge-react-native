@@ -6,25 +6,41 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import {fetchOrders} from "@/services/api";
 import {Order} from "@/types/orders";
+import {useDispatch, useGlobalState} from "@/state/AppContext";
 
 
 export default function TabTwoScreen() {
-  const [orders, setOrders] = useState<Order[]>([]);
+    const dispatch = useDispatch()
+    const state = useGlobalState()
+    const [orders, setOrders] = useState<Order[]>([]);
     const [ordersRefreshing, setOrdersRefreshing] = useState(false);
 
-  useEffect(() => {
+    useEffect(() => {
+        if (state.stateLoaded && state.orders) {
+            setOrders(state.orders)
+        }
+    }, [state.stateLoaded])
+
+    useEffect(() => {
       getOrders();
   }, []);
 
   const getOrders = async () => {
       setOrdersRefreshing(true);
-      const ordersFetched = await fetchOrders();
-        if(ordersFetched) {
-            setOrders(ordersFetched);
-        }
+      try{
+          const ordersFetched = await fetchOrders();
+          if(ordersFetched) {
+              setOrders(ordersFetched);
+              dispatch({
+                  type: 'saveOrders',
+                  payload: { orders: ordersFetched },
+              })
+          }
+      } catch(err) {
+          setOrdersRefreshing(false);
+      }
       setOrdersRefreshing(false);
   };
-
 
   return (
     <ThemedView style={styles.container}>
