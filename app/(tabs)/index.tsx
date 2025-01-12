@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, FlatList, TouchableOpacity, Text } from 'react-native';
+import {StyleSheet, FlatList, TouchableOpacity, Text, ActivityIndicator} from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -17,6 +17,8 @@ export default function PosScreen() {
   const [products, setProducts] = useState<Product[]>([]);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [productsRefreshing, setProductsRefreshing] = useState(false);
+  const [orderRefreshing, setOrderRefreshing] = useState(false);
+  const [paymentRefreshing, setPaymentRefreshing] = useState(false);
 
   useEffect(() => {
     loadStoredState(dispatch)
@@ -59,21 +61,30 @@ export default function PosScreen() {
 
 
   const createOrder = async () => {
+    setOrderRefreshing(true);
     const totalOrder = { total: basket.reduce((acc, item) => acc + roundPrice(item.price_unit * (item.vat_rate + 1)), 0), }
-    const order = await fetchCreateOrder(totalOrder);
-    if(order) {
-      setOrderId(order.id);
-      Toast.show({
-        type: 'success',
-        text1: 'Order created',
-        text2: 'Now you can proceed to payment'
-      });
+    try {
+      const order = await fetchCreateOrder(totalOrder);
+      if(order) {
+        setOrderId(order.id);
+        Toast.show({
+          type: 'success',
+          text1: 'Order created',
+          text2: 'Now you can proceed to payment'
+        });
+      }
+      setOrderRefreshing(false);
+    } catch(err) {
+      setOrderRefreshing(false);
     }
   }
 
   const payOrder = useCallback( async() => {
     let tempBasket = basket;
+    let tempOrderID = orderId;
     setBasket([]);
+    setOrderId(null);
+    setPaymentRefreshing(true);
     const payment = {
       order_id: orderId,
       amount: basket.reduce((acc, item) => acc + item.price_unit, 0)
@@ -89,9 +100,11 @@ export default function PosScreen() {
         text1: 'Order payed',
         text2: 'You can view it in the Orders screen'
       });
-      setOrderId(null);
+      setPaymentRefreshing(false)
     } catch (e) {
       setBasket(tempBasket);
+      setOrderId(tempOrderID);
+      setPaymentRefreshing(false);
     }
   }, [orderId, basket]);
 
@@ -120,8 +133,8 @@ export default function PosScreen() {
 
         <ThemedText style={styles.text}>Total: ${roundPrice(basket.reduce((acc, item) => acc + item.price_unit * (item.vat_rate + 1), 0))}</ThemedText>
 
-        <TouchableOpacity style={styles.button} onPress={createOrder}>
-          <ThemedText style={styles.buttonText}>Create Order</ThemedText>
+        <TouchableOpacity style={styles.button} onPress={createOrder} disabled={orderRefreshing}>
+          <ThemedText style={styles.buttonText}>{orderRefreshing?<ActivityIndicator color="#ffffff"/>:"Create Order"}</ThemedText>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -129,7 +142,7 @@ export default function PosScreen() {
           onPress={payOrder}
           disabled={!orderId}
         >
-          <ThemedText style={styles.buttonText}>Pay</ThemedText>
+          <ThemedText style={styles.buttonText}>{paymentRefreshing?<ActivityIndicator color="#ffffff"/>:"Pay"}</ThemedText>
         </TouchableOpacity>
       </ThemedView>
     </ThemedView>

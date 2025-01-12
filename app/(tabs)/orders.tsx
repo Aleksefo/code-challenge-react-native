@@ -30,10 +30,11 @@ export default function TabTwoScreen() {
       try{
           const ordersFetched = await fetchOrders();
           if(ordersFetched) {
-              setOrders(ordersFetched);
+              let ordersReversed = ordersFetched.reverse()
+              setOrders(ordersReversed);
               dispatch({
                   type: 'saveOrders',
-                  payload: { orders: ordersFetched },
+                  payload: { orders: ordersReversed },
               })
           }
       } catch(err) {
@@ -48,7 +49,7 @@ export default function TabTwoScreen() {
         <ThemedText type="title">Paid Orders</ThemedText>
       </ThemedView>
       <FlatList
-        data={orders.reverse()}
+        data={orders}
         keyExtractor={(item) => item.id}
         onRefresh={getOrders}
         refreshing={ordersRefreshing}
